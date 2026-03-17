@@ -13,28 +13,28 @@ function Monster() {
     <group>
       <mesh>
         <boxGeometry args={[2, 2, 1.5]} />
-        <meshStandardMaterial color="#c8c8c8" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#e8e8e8" metalness={0.3} roughness={0.5} />
       </mesh>
       <Cone args={[0.5, 1, 4]} position={[0.6, 1.5, 0]}>
-        <meshStandardMaterial color="#b0b0b0" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#d8d8d8" metalness={0.3} roughness={0.5} />
       </Cone>
       <Cone args={[0.5, 1, 4]} position={[-0.6, 1.5, 0]}>
-        <meshStandardMaterial color="#b0b0b0" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#d8d8d8" metalness={0.3} roughness={0.5} />
       </Cone>
       <Sphere args={[0.35]} position={[-0.5, 0.2, 0.8]}>
-        <meshStandardMaterial color="#f0f0f0" />
+        <meshStandardMaterial color="#ffffff" />
       </Sphere>
       <Sphere args={[0.35]} position={[0.5, 0.2, 0.8]}>
-        <meshStandardMaterial color="#f0f0f0" />
+        <meshStandardMaterial color="#ffffff" />
       </Sphere>
       <Sphere args={[0.15]} position={[-0.5, 0.2, 1.1]}>
-        <meshStandardMaterial color="#222" />
+        <meshStandardMaterial color="#333" />
       </Sphere>
       <Sphere args={[0.15]} position={[0.5, 0.2, 1.1]}>
-        <meshStandardMaterial color="#222" />
+        <meshStandardMaterial color="#333" />
       </Sphere>
       <Cylinder args={[0.6, 0.8, 0.3, 8]} position={[0, -1.15, 0]}>
-        <meshStandardMaterial color="#a0a0a0" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#d0d0d0" metalness={0.3} roughness={0.5} />
       </Cylinder>
     </group>
   );
@@ -526,13 +526,13 @@ export default function App() {
                         {getCameraDescription(cameraRot, cameraDist)}
                       </span>
                     </div>
-                    <div className="h-52 w-full">
+                    <div className="h-52 w-full bg-black/80">
                       <Canvas camera={{ position: [0, 2, 5] }}>
                         <ambientLight intensity={0.4} />
                         <pointLight position={[10, 10, 10]} intensity={1.2} />
                         <pointLight position={[-10, -5, -5]} intensity={0.3} color="#ff3333" />
                         <Monster />
-                        <Grid infiniteGrid fadeDistance={30} cellColor="#333" sectionColor="#555" />
+                        <Grid infiniteGrid fadeDistance={30} cellColor="#ff3333" sectionColor="#ff5555" />
                         <OrbitControls enablePan={false} minDistance={2} maxDistance={12} />
                         <CameraTracker onUpdate={(rot, dist) => { setCameraRot(rot); setCameraDist(dist); }} />
                       </Canvas>
