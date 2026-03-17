@@ -174,17 +174,22 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-6">
-      {/* ... header ... */}
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ImageIcon className="w-8 h-8 text-indigo-600" />
-          Visual Synthesis AI
-        </h1>
-        <div className="flex items-center gap-4 bg-white p-3 rounded-full shadow-sm border border-slate-200">
-          <Zap className="w-5 h-5 text-amber-500" />
+    <div className="min-h-screen bg-cover bg-center bg-fixed p-6" style={{ backgroundImage: 'url(/background.jpg)' }}>
+      <div className="max-w-7xl mx-auto backdrop-blur-xl bg-white/30 border border-white/20 rounded-3xl p-8 shadow-2xl">
+        {/* Logo at the top center */}
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="Firebean Studio 3 Logo" className="w-24 h-24 object-contain" referrerPolicy="no-referrer" />
         </div>
-      </header>
+
+        <header className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-white">
+            <ImageIcon className="w-8 h-8" />
+            Firebean Studio 3
+          </h1>
+          <div className="flex items-center gap-4 bg-white/20 backdrop-blur-md p-3 rounded-full shadow-sm border border-white/20">
+            <Zap className="w-5 h-5 text-amber-300" />
+          </div>
+        </header>
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ... prompt/style ... */}
