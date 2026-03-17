@@ -174,35 +174,28 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-fixed p-6" style={{ backgroundImage: 'url(/background.jpg)' }}>
-      <div className="max-w-7xl mx-auto backdrop-blur-xl bg-white/30 border border-white/20 rounded-3xl p-8 shadow-2xl">
-        {/* Logo at the top center */}
-        <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="Firebean Studio 3 Logo" className="w-24 h-24 object-contain" referrerPolicy="no-referrer" />
-        </div>
-
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold flex items-center gap-2 text-white">
-            <ImageIcon className="w-8 h-8" />
-            Firebean Studio 3
-          </h1>
+    <div className="min-h-screen bg-cover bg-center bg-fixed p-6" style={{ backgroundImage: 'url(/contact-bg.webp)' }}>
+      <header className="flex flex-col items-center justify-center mb-8 gap-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-6xl font-black text-white tracking-tighter">FIREBEAN STUDIO 3</h1>
           <div className="flex items-center gap-4 bg-white/20 backdrop-blur-md p-3 rounded-full shadow-sm border border-white/20">
             <Zap className="w-5 h-5 text-amber-300" />
           </div>
-        </header>
+        </div>
+      </header>
 
-      <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* ... prompt/style ... */}
-        <section className="lg:col-span-1 space-y-6">
-          <div className="flex gap-2">
+      <div className="max-w-7xl mx-auto backdrop-blur-xl bg-white/30 border border-white/20 rounded-3xl p-8 shadow-2xl">
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <section className="lg:col-span-1 space-y-6">
+          <div className="flex w-full gap-2">
             <button 
-              className={`px-4 py-2 rounded-xl ${activeTab === 'Analysis' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}
+              className={`flex-1 py-6 text-xl rounded-xl ${activeTab === 'Analysis' ? 'bg-red-600 text-white' : 'bg-white text-slate-600'}`}
               onClick={() => setActiveTab('Analysis')}
             >
               Analysis
             </button>
             <button 
-              className={`px-4 py-2 rounded-xl ${activeTab === 'Generation' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}
+              className={`flex-1 py-6 text-xl rounded-xl ${activeTab === 'Generation' ? 'bg-red-600 text-white' : 'bg-white text-slate-600'}`}
               onClick={() => setActiveTab('Generation')}
             >
               Generation
@@ -225,7 +218,7 @@ export default function App() {
               </div>
               
               <button 
-                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold shadow-md"
+                className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold shadow-md"
                 onClick={handleGeneratePrompt}
                 disabled={loading || refPhotos.length === 0}
               >
@@ -341,7 +334,7 @@ export default function App() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold shadow-md"
+                className="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold shadow-md"
                 onClick={handleGenerate}
                 disabled={loading}
               >
@@ -367,7 +360,7 @@ export default function App() {
                     className="absolute bottom-2 right-2 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition"
                     onClick={() => alert(`Selected image ${i + 1} as best!`)}
                   >
-                    <ImageIcon className="w-5 h-5 text-indigo-600" />
+                    <ImageIcon className="w-5 h-5 text-red-600" />
                   </button>
                 </div>
               ))}
@@ -376,5 +369,6 @@ export default function App() {
         </section>
       </main>
     </div>
+  </div>
   );
 }
