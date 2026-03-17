@@ -202,6 +202,8 @@ export default function App() {
   const [socialLoading, setSocialLoading] = useState(false);
   const [socialError, setSocialError] = useState('');
   const [socialProgress, setSocialProgress] = useState(0);
+  const [socialDebugLog, setSocialDebugLog] = useState<string[]>([]);
+  const addSocialLog = (msg: string) => setSocialDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()} ${msg}`]);
   const socialDropRef = useRef<HTMLDivElement>(null);
 
   // ── Ref Photo Upload ──
@@ -272,27 +274,24 @@ export default function App() {
     });
   };
 
-  // ── Generate ──
+  // ── Actions ──
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() && refPhotos.length === 0) return;
     setGenLoading(true);
     setGenError('');
     setGenResults([]);
+    setDebugLog([]);
     try {
-      const cameraDesc = getCameraDescription(cameraRot, cameraDist);
-      const fullPrompt = `${prompt}. Camera: ${cameraDesc}. Style: ${style}. Resolution: ${resolution}. Aspect ratio: ${aspectRatio}.`;
-      setDebugLog([]);
-      addLog('Generate started...');
-      const results = await generateVisual(fullPrompt, refPhotos, addLog);
-      setGenResults(results);
+      const finalPrompt = `[Style: ${style}] [Aspect: ${aspectRatio}] [Angle: ${getCameraDescription(cameraRot, cameraDist)}] ${prompt}`;
+      const urls = await generateVisual(finalPrompt, refPhotos, addLog);
+      setGenResults(urls);
     } catch (err: any) {
-      setGenError(err.message || 'Generation failed. Please try again.');
+      setGenError(err.message);
     } finally {
       setGenLoading(false);
     }
   };
 
-  // ── Analyze ──
   const handleAnalyze = async () => {
     if (!photoToAnalyze) return;
     setAnalyzeLoading(true);
@@ -301,134 +300,89 @@ export default function App() {
     setPromptEn('');
     setPromptZh('');
     try {
-      setDebugLog([]);
-      addLog('Analysis started...');
-      const result = await analyzeImage(photoToAnalyze, addLog);
-      setPromptJson(result.json);
-      setPromptEn(result.en);
-      setPromptZh(result.zh);
+      const res = await analyzeImage(photoToAnalyze, addLog);
+      setPromptJson(res.json);
+      setPromptEn(res.en);
+      setPromptZh(res.zh);
     } catch (err: any) {
-      setAnalyzeError(err.message || 'Analysis failed. Please try again.');
+      setAnalyzeError(err.message);
     } finally {
       setAnalyzeLoading(false);
     }
   };
 
-  // ── Social Media Dummy Generate ──
   const handleSocialGenerate = async () => {
     setSocialLoading(true);
     setSocialError('');
     setSocialResults([]);
     setSocialProgress(0);
+    setSocialDebugLog([]);
     try {
-      setDebugLog([]);
-      addLog('Social Media Dummy generation started...');
-      const progressLogger = (msg: string) => {
-        addLog(msg);
-        if (msg.includes('✓ Mockup')) {
-          setSocialProgress(prev => prev + 1);
-        }
-      };
-      const results = await generateSocialMockup(socialMode, socialUserInput, socialScreenshots, progressLogger);
-      setSocialResults(results);
-      setSocialProgress(4);
+      const urls = await generateSocialMockup(socialMode, socialUserInput, socialScreenshots, (msg) => {
+        addSocialLog(msg);
+        if (msg.includes('✓ Mockup')) setSocialProgress(p => p + 1);
+      });
+      setSocialResults(urls);
     } catch (err: any) {
-      setSocialError(err.message || 'Mockup generation failed. Please try again.');
+      setSocialError(err.message);
     } finally {
       setSocialLoading(false);
     }
   };
 
-  const downloadImage = (url: string, index: number) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `firebean-studio-${index + 1}.png`;
-    a.click();
+  const downloadImage = async (url: string, index: number) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `firebean-result-${Date.now()}-${index + 1}.png`;
+    link.click();
   };
-
-  const STYLES = [
-    { value: 'cinematic', label: '🎬 Cinematic' },
-    { value: 'editorial', label: '📸 Editorial' },
-    { value: 'studio', label: '💡 Studio Lighting' },
-    { value: 'outdoor', label: '🌿 Natural Outdoor' },
-    { value: 'neon', label: '🌆 Neon Noir' },
-    { value: 'fashion', label: '👗 High Fashion' },
-    { value: 'documentary', label: '🎞 Documentary' },
-    { value: 'fantasy', label: '✨ Fantasy' },
-  ];
-
-  const RESOLUTIONS = [
-    { value: '2K', label: '2K (2048×1080)' },
-    { value: '4K', label: '4K (3840×2160)' },
-  ];
-
-  const ASPECT_RATIOS = [
-    { value: '16:9', label: '16:9 — Landscape' },
-    { value: '9:16', label: '9:16 — Portrait' },
-    { value: '1:1', label: '1:1 — Square' },
-    { value: '4:3', label: '4:3 — Classic' },
-    { value: '21:9', label: '21:9 — Ultrawide' },
-  ];
 
   const currentMode = SOCIAL_MODES.find(m => m.id === socialMode)!;
 
-  const MODE_DESCRIPTIONS: Record<SocialMode, string> = {
-    creative: 'Aesthetic workspace flat lay with art supplies, color swatches & monstera shadows. Perfect for design portfolios and creative brands.',
-    keynote: 'Massive boardroom screen with professional audience silhouettes. Ideal for B2B, annual reports & corporate authority.',
-    product: 'Clean product photography with premium packaging & pastel backgrounds. Best for e-commerce, beauty & tech launches.',
-    lifestyle: 'Cozy home environment with warm lamp light & soft textures. Great for wellness apps, streaming & home lifestyle.',
-    urban: 'Night city crosswalk with neon reflections & motion blur. Perfect for delivery apps, events & youth culture brands.',
-  };
-
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${contactBg})` }}
-    >
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-[#050505] text-white font-inter selection:bg-red-500/30">
+      {/* Background Decor */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,20,0),rgba(5,5,5,1))]" />
+        <img src={contactBg} className="w-full h-full object-cover opacity-20 mix-blend-overlay" alt="" />
+      </div>
 
-          {/* ── Header ── */}
-          <header className="flex items-center justify-between mb-10 bg-black/75 border border-white/10 rounded-2xl px-5 py-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center">
-                <img src={firebeanLogo} alt="Firebean" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-white tracking-tight leading-none">FIREBEAN STUDIO</h1>
-                <p className="text-xs text-red-500 font-semibold tracking-[0.2em] uppercase">Visual AI · Version 3</p>
-              </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
+          <div className="flex items-center gap-6">
+            <img src={firebeanLogo} alt="Firebean" className="h-10 md:h-12 w-auto brightness-110 drop-shadow-[0_0_15px_rgba(255,51,51,0.3)]" />
+            <div className="h-10 w-px bg-white/10 hidden md:block" />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-anton tracking-wider uppercase text-white">Studio 3.6</h1>
+              <p className="text-[10px] md:text-xs text-red-500 font-mono tracking-[0.2em] uppercase font-bold">Advanced PR Visual Engine</p>
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs text-white/30 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-              Gemini 2.5 Flash · Free Tier
-            </div>
-          </header>
-
-          {/* ── Tab Navigation ── */}
-          <div className="flex gap-1 p-1 bg-black/75 border border-white/10 rounded-2xl mb-8 w-fit">
-            {(['Generate', 'Analyze', 'SocialDummy'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  activeTab === tab
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
-                    : 'text-white/40 hover:text-white/70'
-                }`}
-              >
-                {tab === 'Generate' && <Sparkles className="w-4 h-4" />}
-                {tab === 'Analyze' && <ScanSearch className="w-4 h-4" />}
-                {tab === 'SocialDummy' && <Smartphone className="w-4 h-4" />}
-                <span>
-                  {tab === 'Generate' ? 'Generate Visual' : tab === 'Analyze' ? 'Analyze Photo' : 'Social Dummy'}
-                </span>
-              </button>
-            ))}
           </div>
 
-          <AnimatePresence mode="wait">
+          <nav className="flex bg-black/40 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl">
+            {[
+              { id: 'Generate', label: 'Generate', icon: Sparkles },
+              { id: 'Analyze', label: 'Analyze', icon: ScanSearch },
+              { id: 'SocialDummy', label: 'Social Dummy', icon: Smartphone },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                    : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'animate-pulse' : ''}`} />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
+        <main className="relative">
+          <AnimatePresence mode="wait">
             {/* ══════════════════════════════════════════════════════════════
                 TAB 1 — GENERATE VISUAL
             ══════════════════════════════════════════════════════════════ */}
@@ -443,57 +397,75 @@ export default function App() {
               >
                 {/* Left Panel — Controls */}
                 <div className="lg:col-span-2 space-y-5">
-                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5">
-                    <label className="block text-xs text-white/60 uppercase tracking-widest mb-2">Prompt</label>
+                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5 backdrop-blur-md">
+                    <label className="block text-xs text-white/60 uppercase tracking-widest mb-3">Creative Prompt</label>
                     <textarea
                       value={prompt}
                       onChange={e => setPrompt(e.target.value)}
-                      placeholder="Describe your vision... e.g. A woman in red dress standing in a misty forest at golden hour"
-                      rows={4}
-                      className="w-full bg-transparent text-white text-sm placeholder-white/30 resize-none focus:outline-none leading-relaxed"
+                      placeholder="Describe the scene you want to create..."
+                      className="w-full h-32 bg-white/5 border border-white/10 text-white text-sm p-4 rounded-xl focus:outline-none focus:border-red-500/60 resize-none transition-all placeholder:text-white/20"
                     />
                   </div>
 
-                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5">
+                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-xs text-white/60 uppercase tracking-widest">Reference Photos</label>
-                      <span className="text-xs text-white/30 font-mono">{refPhotos.length}/5</span>
+                      <span className="text-[10px] text-white/30 font-mono">{refPhotos.length}/5</span>
                     </div>
-                    {refPhotos.length > 0 && (
-                      <div className="flex gap-2 flex-wrap mb-3">
+
+                    <div className="flex gap-2.5 mb-3 flex-wrap">
+                      <AnimatePresence>
                         {refPhotos.map((src, i) => (
                           <RefPhotoThumb key={i} src={src} onRemove={() => setRefPhotos(p => p.filter((_, j) => j !== i))} />
                         ))}
-                      </div>
-                    )}
+                      </AnimatePresence>
+                    </div>
+
                     {refPhotos.length < 5 && (
                       <div
                         ref={refDropRef}
                         onDragOver={e => e.preventDefault()}
                         onDrop={handleRefDrop}
-                        className="border border-dashed border-white/15 rounded-xl p-4 text-center cursor-pointer hover:border-red-500/50 hover:bg-red-500/5 transition-all group"
+                        className="border-2 border-dashed border-white/15 rounded-xl p-6 text-center cursor-pointer hover:border-red-500/50 hover:bg-red-500/5 transition-all group"
                         onClick={() => document.getElementById('ref-input')?.click()}
                       >
-                        <Upload className="w-5 h-5 text-white/20 group-hover:text-red-400 mx-auto mb-1.5 transition" />
-                        <p className="text-xs text-white/50 group-hover:text-white/80 transition">Drop photos or click to upload</p>
+                        <Upload className="w-6 h-6 text-white/15 group-hover:text-red-400 mx-auto mb-2 transition" />
+                        <p className="text-xs text-white/25 group-hover:text-white/50 transition">Drag & drop or click to upload</p>
                         <input id="ref-input" type="file" accept="image/*" multiple className="hidden" onChange={handleRefFileInput} />
                       </div>
                     )}
                   </div>
 
-                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5 space-y-4">
-                    <Select label="Visual Style" value={style} options={STYLES} onChange={setStyle} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <Select label="Resolution" value={resolution} options={RESOLUTIONS} onChange={setResolution} />
-                      <Select label="Aspect Ratio" value={aspectRatio} options={ASPECT_RATIOS} onChange={setAspectRatio} />
-                    </div>
+                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5 backdrop-blur-md grid grid-cols-2 gap-4">
+                    <Select
+                      label="Style"
+                      value={style}
+                      onChange={setStyle}
+                      options={[
+                        { value: 'cinematic', label: 'Cinematic' },
+                        { value: 'product', label: 'Product' },
+                        { value: 'portrait', label: 'Portrait' },
+                        { value: 'abstract', label: 'Abstract' },
+                      ]}
+                    />
+                    <Select
+                      label="Aspect Ratio"
+                      value={aspectRatio}
+                      onChange={setAspectRatio}
+                      options={[
+                        { value: '16:9', label: '16:9 Wide' },
+                        { value: '9:16', label: '9:16 Story' },
+                        { value: '1:1', label: '1:1 Square' },
+                        { value: '4:5', label: '4:5 Portrait' },
+                      ]}
+                    />
                   </div>
 
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleGenerate}
-                    disabled={genLoading || !prompt.trim()}
+                    disabled={genLoading || (!prompt.trim() && refPhotos.length === 0)}
                     className="w-full py-4 bg-red-600 hover:bg-red-500 disabled:bg-white/10 disabled:text-white/30 text-white font-bold text-sm rounded-2xl shadow-lg shadow-red-900/40 transition-all flex items-center justify-center gap-2"
                   >
                     {genLoading ? (
@@ -698,22 +670,6 @@ export default function App() {
                 {/* ── Left Panel ── */}
                 <div className="lg:col-span-2 space-y-5">
 
-                  {/* Intro Card */}
-                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-red-600/20 border border-red-500/30 flex items-center justify-center flex-shrink-0">
-                        <Smartphone className="w-4 h-4 text-red-400" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-bold text-white leading-tight">Social Media Dummy</h2>
-                        <p className="text-xs text-white/35">AI-powered lifestyle mockup generator</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-white/30 leading-relaxed">
-                      Upload up to <span className="text-white/50">3 social media screenshots</span>, choose a <span className="text-white/50">scene mode</span>, add your creative twist — AI generates <span className="text-white/50">4 photorealistic PR mockups</span> ready for campaigns.
-                    </p>
-                  </div>
-
                   {/* Screenshot Upload */}
                   <div className="bg-black/75 border border-white/15 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
@@ -871,32 +827,10 @@ export default function App() {
                 {/* ── Right Panel ── */}
                 <div className="lg:col-span-3 space-y-5">
 
-                  {/* Active Mode Info */}
-                  <div className="bg-black/75 border border-white/15 rounded-2xl p-5">
-                    <div className="flex items-start gap-4">
-                      <span className="text-4xl leading-none mt-0.5 flex-shrink-0">{currentMode.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="text-base font-bold text-white">{currentMode.label} Mode</h3>
-                          <span className="text-xs text-red-300 bg-red-600/15 border border-red-500/20 px-2 py-0.5 rounded-full">{currentMode.labelZh}</span>
-                          <span className="text-xs text-white/25 italic">{currentMode.tagline}</span>
-                        </div>
-                        <p className="text-xs text-white/40 leading-relaxed mb-2">
-                          {MODE_DESCRIPTIONS[socialMode]}
-                        </p>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-white/20 uppercase tracking-wider">Best for:</span>
-                          <span className="text-xs text-white/35">{currentMode.useCases}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Results Grid */}
                   {socialResults.length > 0 ? (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-white/40 uppercase tracking-widest">Generated Mockups — Hover to download</p>
                         <span className="text-xs text-red-400 font-mono bg-red-600/10 border border-red-500/20 px-2.5 py-1 rounded-full">
                           {currentMode.emoji} {currentMode.label}
                         </span>
@@ -929,6 +863,26 @@ export default function App() {
                           </motion.div>
                         ))}
                       </div>
+
+                      {/* Social Debug Panel */}
+                      {socialDebugLog.length > 0 && (
+                        <div className="mt-4 bg-black/80 border border-white/10 rounded-2xl p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-white/40 uppercase tracking-widest font-mono">Debug Info</span>
+                            <button onClick={() => setSocialDebugLog([])} className="text-xs text-white/20 hover:text-white/60 transition">Clear</button>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto space-y-0.5">
+                            {socialDebugLog.map((line, i) => (
+                              <p key={i} className={`text-xs font-mono ${
+                                line.includes('✓') ? 'text-green-400' :
+                                line.includes('✗') ? 'text-red-400' :
+                                line.includes('error') || line.includes('Error') ? 'text-red-400' :
+                                'text-white/50'
+                              }`}>{line}</p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     /* Empty State */
@@ -967,37 +921,17 @@ export default function App() {
                       )}
                     </div>
                   )}
-
-                  {/* Pro Tips */}
-                  {!socialLoading && socialResults.length === 0 && (
-                    <div className="bg-black/50 border border-white/8 rounded-2xl p-4">
-                      <p className="text-xs text-white/35 uppercase tracking-widest mb-3 font-semibold">Pro Tips</p>
-                      <div className="space-y-2.5">
-                        {[
-                          { icon: '📱', tip: 'Upload actual screenshots from Instagram, Facebook, or your website for the most realistic result.' },
-                          { icon: '✍️', tip: 'Use the Creative Twist field to add unique props like a coffee cup, a pet, or a specific weather mood.' },
-                          { icon: '🎯', tip: 'Every mode auto-applies professional PR quality modifiers — Sony A7R IV, 8K, volumetric lighting.' },
-                          { icon: '🔄', tip: 'Generate multiple times for different compositions. Each run produces 4 unique variations.' },
-                        ].map((item, i) => (
-                          <div key={i} className="flex items-start gap-2.5">
-                            <span className="text-sm leading-none mt-0.5 flex-shrink-0">{item.icon}</span>
-                            <p className="text-xs text-white/30 leading-relaxed">{item.tip}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             )}
 
           </AnimatePresence>
 
-          {/* ── Debug Panel ── */}
+          {/* ── Global Debug Panel (Mainly for Tab 1 & 2) ── */}
           {debugLog.length > 0 && (
             <div className="mt-6 bg-black/80 border border-white/10 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-white/40 uppercase tracking-widest font-mono">Debug Log</span>
+                <span className="text-xs text-white/40 uppercase tracking-widest font-mono">System Debug Log</span>
                 <button onClick={() => setDebugLog([])} className="text-xs text-white/20 hover:text-white/60 transition">Clear</button>
               </div>
               <div className="max-h-48 overflow-y-auto space-y-0.5">
