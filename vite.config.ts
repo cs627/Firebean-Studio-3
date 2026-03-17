@@ -6,9 +6,15 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    base: '/Firebean-Studio-3/',
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
+      'process.env.OPENAI_BASE_URL': JSON.stringify(env.OPENAI_BASE_URL || 'https://api.manus.im/api/llm-proxy/v1'),
+      'import.meta.env.VITE_OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
+      'import.meta.env.VITE_OPENAI_BASE_URL': JSON.stringify(env.OPENAI_BASE_URL || 'https://api.manus.im/api/llm-proxy/v1'),
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
     },
     resolve: {
       alias: {
