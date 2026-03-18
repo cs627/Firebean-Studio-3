@@ -344,7 +344,7 @@ export default function App() {
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,20,0),rgba(5,5,5,1))]" />
-        <img src={contactBg} className="w-full h-full object-cover opacity-20 mix-blend-overlay" alt="" />
+        <img src={contactBg} className="w-full h-full object-cover opacity-80 mix-blend-overlay" alt="" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
@@ -354,7 +354,7 @@ export default function App() {
             <img src={firebeanLogo} alt="Firebean" className="h-10 md:h-12 w-auto brightness-110 drop-shadow-[0_0_15px_rgba(255,51,51,0.3)]" />
             <div className="h-10 w-px bg-white/10 hidden md:block" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-anton tracking-wider uppercase text-white">Studio 3.6</h1>
+              <h1 className="text-2xl md:text-3xl font-anton tracking-wider uppercase text-white">Studio 3.12</h1>
               <p className="text-[10px] md:text-xs text-red-500 font-mono tracking-[0.2em] uppercase font-bold">Advanced PR Visual Engine</p>
             </div>
           </div>
@@ -947,7 +947,7 @@ export default function App() {
             </div>
           )}
 
-        </div>
+        </main>
       </div>
     </div>
   );
