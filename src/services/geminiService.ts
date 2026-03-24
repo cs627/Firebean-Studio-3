@@ -1,14 +1,12 @@
-// Firebean Studio 3 — Gemini AI Service v3.6
+// Firebean Studio 3 — Gemini AI Service v3.7
 // Image Generation: Nano Banana (gemini-2.5-flash-image) via native Gemini REST API
-// Image Analysis: gemini-2.5-flash via OpenAI-compatible proxy
+// Image Analysis: gemini-2.5-flash via native Gemini REST API (fixed 401 proxy error)
 // Social Media Dummy: 5 precision scene modes with Nano Banana
 
 // ─── API Config ───────────────────────────────────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY as string;
-const OPENAI_BASE_URL = 'https://api.manus.im/api/llm-proxy/v1';
 const ANALYSIS_MODEL = 'gemini-2.5-flash';
 
 // ─── Debug Logger ─────────────────────────────────────────────────────────────
@@ -144,25 +142,26 @@ Write the same detailed prompt in Traditional Chinese (繁體中文), maintainin
 
 Return ONLY the three sections separated by "---SECTION---". No extra text before or after.`;
 
-  const response = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
+  // Extract base64 data and mime type from the data URL
+  const mimeType = imageUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+  const base64Data = imageUrl.includes(',') ? imageUrl.split(',')[1] : imageUrl;
+
+  const analysisPayload = {
+    contents: [
+      {
+        parts: [
+          { inlineData: { mimeType, data: base64Data } },
+          { text: systemPrompt },
+        ],
+      },
+    ],
+  };
+
+  const analysisUrl = `${GEMINI_BASE}/models/${ANALYSIS_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const response = await fetch(analysisUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: ANALYSIS_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: imageUrl } },
-            { type: 'text', text: systemPrompt },
-          ],
-        },
-      ],
-      max_tokens: 3000,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(analysisPayload),
   });
 
   if (!response.ok) {
@@ -172,7 +171,7 @@ Return ONLY the three sections separated by "---SECTION---". No extra text befor
   }
 
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content || '';
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   log(`✓ Analysis complete. Response length: ${text.length} chars`);
 
   const sections = text.split('---SECTION---').map((s: string) => s.trim());
